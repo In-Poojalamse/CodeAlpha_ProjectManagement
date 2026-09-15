@@ -12,7 +12,7 @@ function Register() {
 
     try {
       const response = await axios.post(
-        "http://localhost:5001/api/auth/register",
+        "https://codealpha-projectmanagement-uk62.onrender.com/api/auth/register",
         {
           name,
           email,

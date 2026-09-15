@@ -27,7 +27,7 @@ const dbConfig = {
 // Enable SSL only when DB_SSL=true
 if (process.env.DB_SSL === "true") {
   dbConfig.ssl = {
-    ca: fs.readFileSync("./ca.pem"),
+    ca: fs.readFileSync(process.env.CA_CERT_PATH || "./ca.pem"),
     rejectUnauthorized: true,
   };
 }
@@ -288,15 +288,15 @@ app.post("/api/projects", authenticateToken, async (req, res) => {
 app.get("/api/projects", authenticateToken, async (req, res) => {
   try {
     const [projects] = await db.query(
-      `SELECT
-        p.id,
-        p.name,
-        p.description,
-        p.created_by,
-        p.created_at,
-        u.name AS created_by_name
-       FROM projects p
-       JOIN users u ON p.created_by = u.id
+      `SELECT 
+        p.id, 
+        p.name, 
+        p.description, 
+        p.created_by, 
+        p.created_at, 
+        u.name AS created_by_name 
+       FROM projects p 
+       JOIN users u ON p.created_by = u.id 
        ORDER BY p.created_at DESC`
     );
 
@@ -356,8 +356,8 @@ app.post("/api/tasks", authenticateToken, async (req, res) => {
     }
 
     const [result] = await db.query(
-      `INSERT INTO tasks
-       (project_id, title, description, assigned_to, status, due_date)
+      `INSERT INTO tasks 
+       (project_id, title, description, assigned_to, status, due_date) 
        VALUES (?, ?, ?, ?, ?, ?)`,
       [
         project_id,
@@ -387,20 +387,20 @@ app.post("/api/tasks", authenticateToken, async (req, res) => {
 app.get("/api/tasks", authenticateToken, async (req, res) => {
   try {
     const [tasks] = await db.query(
-      `SELECT
-        t.id,
-        t.project_id,
-        t.title,
-        t.description,
-        t.assigned_to,
-        t.status,
-        t.due_date,
-        t.created_at,
-        p.name AS project_name,
-        u.name AS assigned_user_name
-       FROM tasks t
-       JOIN projects p ON t.project_id = p.id
-       LEFT JOIN users u ON t.assigned_to = u.id
+      `SELECT 
+        t.id, 
+        t.project_id, 
+        t.title, 
+        t.description, 
+        t.assigned_to, 
+        t.status, 
+        t.due_date, 
+        t.created_at, 
+        p.name AS project_name, 
+        u.name AS assigned_user_name 
+       FROM tasks t 
+       JOIN projects p ON t.project_id = p.id 
+       LEFT JOIN users u ON t.assigned_to = u.id 
        ORDER BY t.created_at DESC`
     );
 
@@ -431,8 +431,8 @@ app.post("/api/comments", authenticateToken, async (req, res) => {
     }
 
     const [result] = await db.query(
-      `INSERT INTO comments
-       (task_id, user_id, comment)
+      `INSERT INTO comments 
+       (task_id, user_id, comment) 
        VALUES (?, ?, ?)`,
       [
         task_id,
@@ -464,16 +464,16 @@ app.get(
       const { taskId } = req.params;
 
       const [comments] = await db.query(
-        `SELECT
-          c.id,
-          c.task_id,
-          c.user_id,
-          c.comment,
-          c.created_at,
-          u.name AS user_name
-         FROM comments c
-         JOIN users u ON c.user_id = u.id
-         WHERE c.task_id = ?
+        `SELECT 
+          c.id, 
+          c.task_id, 
+          c.user_id, 
+          c.comment, 
+          c.created_at, 
+          u.name AS user_name 
+         FROM comments c 
+         JOIN users u ON c.user_id = u.id 
+         WHERE c.task_id = ? 
          ORDER BY c.created_at ASC`,
         [taskId]
       );

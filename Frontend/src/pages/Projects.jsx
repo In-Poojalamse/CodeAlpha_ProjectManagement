@@ -18,7 +18,7 @@ function Projects() {
       const token = localStorage.getItem("token");
 
       const response = await axios.get(
-        "http://localhost:5001/api/projects",
+        "https://codealpha-projectmanagement-uk62.onrender.com/api/projects",
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -64,7 +64,7 @@ function Projects() {
       const token = localStorage.getItem("token");
 
       const response = await axios.post(
-        "http://localhost:5001/api/projects",
+        "https://codealpha-projectmanagement-uk62.onrender.com/api/projects",
         {
           name: name,
           description: description,

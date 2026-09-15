@@ -3,13 +3,14 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 
+const API_URL = "https://codealpha-projectmanagement-uk62.onrender.com";
+
 function Tasks() {
   const navigate = useNavigate();
 
   const [tasks, setTasks] = useState([]);
   const [projects, setProjects] = useState([]);
   const [users, setUsers] = useState([]);
-
   const [showForm, setShowForm] = useState(false);
 
   const [projectId, setProjectId] = useState("");
@@ -21,12 +22,7 @@ function Tasks() {
 
   const [commentText, setCommentText] = useState({});
   const [comments, setComments] = useState({});
-
   const [message, setMessage] = useState("");
-
-  // ===============================
-  // GET TOKEN CONFIG
-  // ===============================
 
   const getConfig = () => {
     const token = localStorage.getItem("token");
@@ -38,37 +34,18 @@ function Tasks() {
     };
   };
 
-  // ===============================
-  // INITIAL LOAD
-  // ===============================
-
   useEffect(() => {
     let isMounted = true;
 
     const loadInitialData = async () => {
       try {
-        const config = {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
-        };
+        const config = getConfig();
 
         const [tasksResponse, projectsResponse, usersResponse] =
           await Promise.all([
-            axios.get(
-              "http://localhost:5001/api/tasks",
-              config
-            ),
-
-            axios.get(
-              "http://localhost:5001/api/projects",
-              config
-            ),
-
-            axios.get(
-              "http://localhost:5001/api/users",
-              config
-            ),
+            axios.get(`${API_URL}/api/tasks`, config),
+            axios.get(`${API_URL}/api/projects`, config),
+            axios.get(`${API_URL}/api/users`, config),
           ]);
 
         const taskData = tasksResponse.data;
@@ -81,12 +58,11 @@ function Tasks() {
           taskData.map(async (task) => {
             try {
               const commentsResponse = await axios.get(
-                `http://localhost:5001/api/tasks/${task.id}/comments`,
+                `${API_URL}/api/tasks/${task.id}/comments`,
                 config
               );
 
-              loadedComments[task.id] =
-                commentsResponse.data;
+              loadedComments[task.id] = commentsResponse.data;
             } catch (error) {
               console.error(
                 `Error loading comments for task ${task.id}:`,
@@ -107,10 +83,7 @@ function Tasks() {
         setUsers(userData);
         setComments(loadedComments);
       } catch (error) {
-        console.error(
-          "Error loading task data:",
-          error
-        );
+        console.error("Error loading task data:", error);
 
         if (isMounted) {
           setMessage(
@@ -128,30 +101,15 @@ function Tasks() {
     };
   }, []);
 
-  // ===============================
-  // REFRESH TASK DATA
-  // ===============================
-
   const refreshTaskData = async () => {
     try {
       const config = getConfig();
 
       const [tasksResponse, projectsResponse, usersResponse] =
         await Promise.all([
-          axios.get(
-            "http://localhost:5001/api/tasks",
-            config
-          ),
-
-          axios.get(
-            "http://localhost:5001/api/projects",
-            config
-          ),
-
-          axios.get(
-            "http://localhost:5001/api/users",
-            config
-          ),
+          axios.get(`${API_URL}/api/tasks`, config),
+          axios.get(`${API_URL}/api/projects`, config),
+          axios.get(`${API_URL}/api/users`, config),
         ]);
 
       const taskData = tasksResponse.data;
@@ -161,12 +119,11 @@ function Tasks() {
         taskData.map(async (task) => {
           try {
             const commentsResponse = await axios.get(
-              `http://localhost:5001/api/tasks/${task.id}/comments`,
+              `${API_URL}/api/tasks/${task.id}/comments`,
               config
             );
 
-            loadedComments[task.id] =
-              commentsResponse.data;
+            loadedComments[task.id] = commentsResponse.data;
           } catch (error) {
             console.error(
               `Error loading comments for task ${task.id}:`,
@@ -183,10 +140,7 @@ function Tasks() {
       setUsers(usersResponse.data);
       setComments(loadedComments);
     } catch (error) {
-      console.error(
-        "Error refreshing task data:",
-        error
-      );
+      console.error("Error refreshing task data:", error);
 
       setMessage(
         error.response?.data?.message ||
@@ -195,23 +149,17 @@ function Tasks() {
     }
   };
 
-  // ===============================
-  // CREATE TASK
-  // ===============================
-
   const handleCreateTask = async (e) => {
     e.preventDefault();
 
     if (!projectId || !title.trim()) {
-      setMessage(
-        "Project and task title are required"
-      );
+      setMessage("Project and task title are required");
       return;
     }
 
     try {
       const response = await axios.post(
-        "http://localhost:5001/api/tasks",
+        `${API_URL}/api/tasks`,
         {
           project_id: projectId,
           title: title.trim(),
@@ -236,10 +184,7 @@ function Tasks() {
 
       await refreshTaskData();
     } catch (error) {
-      console.error(
-        "Error creating task:",
-        error
-      );
+      console.error("Error creating task:", error);
 
       setMessage(
         error.response?.data?.message ||
@@ -247,10 +192,6 @@ function Tasks() {
       );
     }
   };
-
-  // ===============================
-  // ADD COMMENT
-  // ===============================
 
   const handleAddComment = async (taskId) => {
     const text = commentText[taskId];
@@ -261,7 +202,7 @@ function Tasks() {
 
     try {
       await axios.post(
-        "http://localhost:5001/api/comments",
+        `${API_URL}/api/comments`,
         {
           task_id: taskId,
           comment: text.trim(),
@@ -275,7 +216,7 @@ function Tasks() {
       }));
 
       const response = await axios.get(
-        `http://localhost:5001/api/tasks/${taskId}/comments`,
+        `${API_URL}/api/tasks/${taskId}/comments`,
         getConfig()
       );
 
@@ -284,10 +225,7 @@ function Tasks() {
         [taskId]: response.data,
       }));
     } catch (error) {
-      console.error(
-        "Error adding comment:",
-        error
-      );
+      console.error("Error adding comment:", error);
 
       setMessage(
         error.response?.data?.message ||
@@ -296,20 +234,12 @@ function Tasks() {
     }
   };
 
-  // ===============================
-  // LOGOUT
-  // ===============================
-
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
 
     navigate("/login");
   };
-
-  // ===============================
-  // STATUS STYLE
-  // ===============================
 
   const getStatusStyle = (taskStatus) => {
     if (taskStatus === "Completed") {
@@ -341,8 +271,6 @@ function Tasks() {
         backgroundColor: "#f5f7fb",
       }}
     >
-      {/* SIDEBAR */}
-
       <div
         style={{
           width: "260px",
@@ -417,8 +345,6 @@ function Tasks() {
         </button>
       </div>
 
-      {/* MAIN CONTENT */}
-
       <div
         style={{
           flex: 1,
@@ -427,8 +353,6 @@ function Tasks() {
           minWidth: 0,
         }}
       >
-        {/* HEADER */}
-
         <div
           style={{
             display: "flex",
@@ -463,13 +387,9 @@ function Tasks() {
             onClick={() => setShowForm(!showForm)}
             style={createButtonStyle}
           >
-            {showForm
-              ? "✕ Cancel"
-              : "+ Create Task"}
+            {showForm ? "✕ Cancel" : "+ Create Task"}
           </button>
         </div>
-
-        {/* MESSAGE */}
 
         {message && (
           <div
@@ -485,8 +405,6 @@ function Tasks() {
           </div>
         )}
 
-        {/* CREATE TASK FORM */}
-
         {showForm && (
           <div style={formCardStyle}>
             <h2
@@ -499,55 +417,38 @@ function Tasks() {
             </h2>
 
             <form onSubmit={handleCreateTask}>
-              <label style={labelStyle}>
-                Project
-              </label>
+              <label style={labelStyle}>Project</label>
 
               <select
                 value={projectId}
-                onChange={(e) =>
-                  setProjectId(e.target.value)
-                }
+                onChange={(e) => setProjectId(e.target.value)}
                 style={inputStyle}
               >
-                <option value="">
-                  Select Project
-                </option>
+                <option value="">Select Project</option>
 
                 {projects.map((project) => (
-                  <option
-                    key={project.id}
-                    value={project.id}
-                  >
+                  <option key={project.id} value={project.id}>
                     {project.name}
                   </option>
                 ))}
               </select>
 
-              <label style={labelStyle}>
-                Task Title
-              </label>
+              <label style={labelStyle}>Task Title</label>
 
               <input
                 type="text"
                 placeholder="Enter task title"
                 value={title}
-                onChange={(e) =>
-                  setTitle(e.target.value)
-                }
+                onChange={(e) => setTitle(e.target.value)}
                 style={inputStyle}
               />
 
-              <label style={labelStyle}>
-                Description
-              </label>
+              <label style={labelStyle}>Description</label>
 
               <textarea
                 placeholder="Enter task description"
                 value={description}
-                onChange={(e) =>
-                  setDescription(e.target.value)
-                }
+                onChange={(e) => setDescription(e.target.value)}
                 style={{
                   ...inputStyle,
                   minHeight: "90px",
@@ -555,79 +456,49 @@ function Tasks() {
                 }}
               />
 
-              <label style={labelStyle}>
-                Assign User
-              </label>
+              <label style={labelStyle}>Assign User</label>
 
               <select
                 value={assignedTo}
-                onChange={(e) =>
-                  setAssignedTo(e.target.value)
-                }
+                onChange={(e) => setAssignedTo(e.target.value)}
                 style={inputStyle}
               >
-                <option value="">
-                  Select User
-                </option>
+                <option value="">Select User</option>
 
                 {users.map((user) => (
-                  <option
-                    key={user.id}
-                    value={user.id}
-                  >
+                  <option key={user.id} value={user.id}>
                     {user.name}
                   </option>
                 ))}
               </select>
 
-              <label style={labelStyle}>
-                Status
-              </label>
+              <label style={labelStyle}>Status</label>
 
               <select
                 value={status}
-                onChange={(e) =>
-                  setStatus(e.target.value)
-                }
+                onChange={(e) => setStatus(e.target.value)}
                 style={inputStyle}
               >
-                <option value="Pending">
-                  Pending
-                </option>
-
-                <option value="In Progress">
-                  In Progress
-                </option>
-
-                <option value="Completed">
-                  Completed
-                </option>
+                <option value="Pending">Pending</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Completed">Completed</option>
               </select>
 
-              <label style={labelStyle}>
-                Due Date
-              </label>
+              <label style={labelStyle}>Due Date</label>
 
               <input
                 type="date"
                 value={dueDate}
-                onChange={(e) =>
-                  setDueDate(e.target.value)
-                }
+                onChange={(e) => setDueDate(e.target.value)}
                 style={inputStyle}
               />
 
-              <button
-                type="submit"
-                style={createButtonStyle}
-              >
+              <button type="submit" style={createButtonStyle}>
                 Create Task
               </button>
             </form>
           </div>
         )}
-
-        {/* TASK LIST */}
 
         <h2
           style={{
@@ -642,9 +513,7 @@ function Tasks() {
           <div style={emptyStyle}>
             <h3>No tasks available</h3>
 
-            <p>
-              Create your first task to get started.
-            </p>
+            <p>Create your first task to get started.</p>
           </div>
         ) : (
           <div
@@ -656,12 +525,7 @@ function Tasks() {
             }}
           >
             {tasks.map((task) => (
-              <div
-                key={task.id}
-                style={taskCardStyle}
-              >
-                {/* TASK HEADER */}
-
+              <div key={task.id} style={taskCardStyle}>
                 <div
                   style={{
                     display: "flex",
@@ -699,11 +563,8 @@ function Tasks() {
                     marginTop: "15px",
                   }}
                 >
-                  {task.description ||
-                    "No description provided."}
+                  {task.description || "No description provided."}
                 </p>
-
-                {/* TASK INFORMATION */}
 
                 <div
                   style={{
@@ -719,18 +580,14 @@ function Tasks() {
 
                   <p style={infoStyle}>
                     👤 <strong>Assigned To:</strong>{" "}
-                    {task.assigned_user_name ||
-                      "Not assigned"}
+                    {task.assigned_user_name || "Not assigned"}
                   </p>
 
                   <p style={infoStyle}>
                     📅 <strong>Due Date:</strong>{" "}
-                    {task.due_date ||
-                      "No due date"}
+                    {task.due_date || "No due date"}
                   </p>
                 </div>
-
-                {/* COMMENTS */}
 
                 <div
                   style={{
@@ -749,32 +606,28 @@ function Tasks() {
                   </h4>
 
                   {comments[task.id]?.length > 0 ? (
-                    comments[task.id].map(
-                      (comment) => (
-                        <div
-                          key={comment.id}
+                    comments[task.id].map((comment) => (
+                      <div
+                        key={comment.id}
+                        style={{
+                          backgroundColor: "#f9fafb",
+                          padding: "10px",
+                          borderRadius: "7px",
+                          marginBottom: "8px",
+                        }}
+                      >
+                        <strong>{comment.user_name}</strong>
+
+                        <p
                           style={{
-                            backgroundColor: "#f9fafb",
-                            padding: "10px",
-                            borderRadius: "7px",
-                            marginBottom: "8px",
+                            margin: "5px 0 0",
+                            color: "#4b5563",
                           }}
                         >
-                          <strong>
-                            {comment.user_name}
-                          </strong>
-
-                          <p
-                            style={{
-                              margin: "5px 0 0",
-                              color: "#4b5563",
-                            }}
-                          >
-                            {comment.comment}
-                          </p>
-                        </div>
-                      )
-                    )
+                          {comment.comment}
+                        </p>
+                      </div>
+                    ))
                   ) : (
                     <p
                       style={{
@@ -796,17 +649,12 @@ function Tasks() {
                     <input
                       type="text"
                       placeholder="Write a comment..."
-                      value={
-                        commentText[task.id] || ""
-                      }
+                      value={commentText[task.id] || ""}
                       onChange={(e) =>
-                        setCommentText(
-                          (previous) => ({
-                            ...previous,
-                            [task.id]:
-                              e.target.value,
-                          })
-                        )
+                        setCommentText((previous) => ({
+                          ...previous,
+                          [task.id]: e.target.value,
+                        }))
                       }
                       style={{
                         ...inputStyle,
@@ -816,9 +664,7 @@ function Tasks() {
                     />
 
                     <button
-                      onClick={() =>
-                        handleAddComment(task.id)
-                      }
+                      onClick={() => handleAddComment(task.id)}
                       style={commentButtonStyle}
                     >
                       Add
@@ -833,10 +679,6 @@ function Tasks() {
     </div>
   );
 }
-
-/* ===============================
-   STYLES
-================================ */
 
 const sidebarButtonStyle = {
   display: "flex",
