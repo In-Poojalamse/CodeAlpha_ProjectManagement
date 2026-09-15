@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const fs = require("fs");
 require("dotenv").config();
 
 const mysql = require("mysql2/promise");
@@ -15,12 +16,23 @@ app.use(express.json());
 // MYSQL CONNECTION
 // ===============================
 
-const db = mysql.createPool({
+const dbConfig = {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
-});
+  port: process.env.DB_PORT || 3306,
+};
+
+// Enable SSL only when DB_SSL=true
+if (process.env.DB_SSL === "true") {
+  dbConfig.ssl = {
+    ca: fs.readFileSync("./ca.pem"),
+    rejectUnauthorized: true,
+  };
+}
+
+const db = mysql.createPool(dbConfig);
 
 // ===============================
 // TEST DATABASE CONNECTION
